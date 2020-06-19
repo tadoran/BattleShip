@@ -2,12 +2,13 @@ from random import choice
 
 from field_status import FieldStatus, ShipStatus
 from ship import Ship
-
+from settings import *
 
 class Field:
     # Possible ships on a field. key = ship length, max_count = ships on field, items = Ship objects
     def __init__(self, field=[]):
-        self.size = 10
+        self.width = WIDTH
+        self.height = HEIGHT
         self.possible_dict = {4: {"max_count": 1, "items": []},
                               3: {"max_count": 2, "items": []},
                               2: {"max_count": 3, "items": []},
@@ -25,7 +26,7 @@ class Field:
         pass
 
     def generate_prefilled(self, filler=FieldStatus.EMPTY):
-        return [[filler] * self.size for _ in range(0, self.size)]
+        return [[filler] * self.width for _ in range(0, self.height)]
 
     def append_ship_by_start_segment(self, start_segment: tuple, length: int, is_horizontal: bool):
         ship = Ship(start_segment, length, is_horizontal, self)
@@ -103,28 +104,27 @@ class Field:
     def occupied_region_is_clear(self, position, length, horizontality) -> bool:
         x, y = position
         min_pos = 0
-        max_pos = self.size
+        max_x, max_y = self.width, self.height
 
         if horizontality:
-            if x + length > max_pos:
+            if x + length > max_x:
                 return False
             neighbours = [
                 (xn, yn)
-                for xn in range(max(x, min_pos), min(x + length + 1, max_pos))
-                for yn in range(max(y, min_pos), min(y + 1, max_pos))
+                for xn in range(max(x, min_pos), min(x + length + 1, max_x))
+                for yn in range(max(y, min_pos), min(y + 1, max_y))
             ]
 
         else:
-            if y + length > max_pos:
+            if y + length > max_y:
                 return False
             neighbours = [
                 (xn, yn)
-                for xn in range(max(x, min_pos), min(x + 1, max_pos))
-                for yn in range(max(y, min_pos), min(y + length + 1, max_pos))
+                for xn in range(max(x, min_pos), min(x + 1, max_x))
+                for yn in range(max(y, min_pos), min(y + length + 1, max_y))
             ]
 
         for (xn, yn) in neighbours:
-            # print(self.repr_field( self.field_mask))
             if self.coord_status(xn, yn, self.field_mask) == FieldStatus.OCCUPIED:
                 return False
         return True
@@ -136,8 +136,8 @@ class Field:
 
                 possible_entry_points = [
                     ((x, y), horizontality)
-                    for y in range(0, self.size)
-                    for x in range(0, self.size)
+                    for y in range(0, self.height)
+                    for x in range(0, self.width)
                     for horizontality in (True, False)
                     if self.occupied_region_is_clear((x, y), length, horizontality)
                 ]
@@ -145,8 +145,8 @@ class Field:
                     print("No locations")
                     possible_entry_points = [
                         ((x, y), horizontality)
-                        for y in range(0, self.size)
-                        for x in range(0, self.size)
+                        for y in range(0, self.height)
+                        for x in range(0, self.width)
                         for horizontality in (True, False)
                         if self.occupied_region_is_clear((x, y), length, horizontality)
                     ]
@@ -176,22 +176,8 @@ def join_multiline_strings(*args, sep=" ", sep_length=5) -> str:
 if __name__ == "__main__":
     a = Field()
     a.generate_ships_randomly()
-    # a.register_shot(9,8)
-    # a.register_shot(9,9)
-    # for i in range(10):
-    #     [a.register_shot(randrange(0, 9),randrange(0, 9))]
-
-    # bc_third_segment = a.possible_dict[4]["items"][0].part_positions[2]
-    # a.register_shot(*bc_third_segment)
-    # print(a.possible_dict)
-    # print(a.repr_field(a.field))
-    # print(a.repr_field(a.ship_mask))
-    # print(join_multiline_strings(a.repr_field(a.field), a.repr_field(a.field_mask)))
     b = Field()
     b.generate_ships_randomly()
-    # print(join_multiline_strings(b.repr_field(b.field), b.repr_field(b.field_mask)))
     print(join_multiline_strings(a.repr_field(a.field), b.repr_field(b.field)))
     exl = a.repr_field_plain()
     print(exl)
-    # from pyperclip import copy as clipboard_copy
-    # clipboard_copy(exl)

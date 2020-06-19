@@ -29,9 +29,9 @@ class Ship:
     def get_position(self):
         x1, y1 = self.part_positions[0]
         if self.horizontal:
-            search_points = {xn: (xn, y1) for xn in range(x1 + 1, min(x1 + 4, len(self.field)))}
+            search_points = {xn: (xn, y1) for xn in range(x1 + 1, min(x1 + 4, self.field.width))}
         else:
-            search_points = {yn: (x1, yn) for yn in range(y1 + 1, min(y1 + 4, len(self.field)))}
+            search_points = {yn: (x1, yn) for yn in range(y1 + 1, min(y1 + 4, self.field.height))}
 
         for point in sorted(search_points):
             x, y = search_points[point]
@@ -44,13 +44,13 @@ class Ship:
     def set_position(self):
         start_x, start_y = self.part_positions[0]
         if self.horizontal:
-            if start_x + self.length > self.field.size:
+            if start_x + self.length > self.field.width:
                 raise IndexError("Ship is out of x boundaries")
             for x in range(start_x, start_x + self.length):
                 self.field.field[start_y][x] = FieldStatus.SHIP_FIXED
                 if x > start_x: self.part_positions.append((x, start_y))
         else:
-            if start_y + self.length > self.field.size:
+            if start_y + self.length > self.field.width:
                 raise IndexError("Ship is out of y boundaries")
             for y in range(start_y, start_y + self.length):
                 self.field.field[y][start_x] = FieldStatus.SHIP_FIXED
@@ -82,11 +82,13 @@ class Ship:
     def get_neighbours(self, position) -> list:
         x, y = position
         min_pos = 0
-        max_pos = len(self.field.field)
+        max_pos_x = self.field.width
+        max_pos_y = self.field.height
+
         return [
             (xn, yn)
-            for xn in range(max(x - 1, min_pos), min(x + 2, max_pos))
-            for yn in range(max(y - 1, min_pos), min(y + 2, max_pos))
+            for xn in range(max(x - 1, min_pos), min(x + 2, max_pos_x))
+            for yn in range(max(y - 1, min_pos), min(y + 2, max_pos_y))
             if not ((xn == x) and (yn == y))
         ]
 
@@ -103,48 +105,48 @@ class Ship:
         return ShipClass(self.length).name
 
 
-def validate_battlefield(field):
-    # write your magic here
-
-    possible_dict = {4: {"max_count": 1, "items": []},
-                     3: {"max_count": 2, "items": []},
-                     2: {"max_count": 3, "items": []},
-                     1: {"max_count": 4, "items": []}
-                     }
-
-    # all_ships = []
-    field_mask = [[0 for _ in range(0, len(battleField) + 1)] for __ in range(0, len(battleField) + 1)]
-    for y in range(0, len(field)):
-        for x in range(0, len(field)):
-            # print(f"{(x,y)}")
-            if field_mask[y][x] == 0:
-                # print(f"{(x,y)} not masked")
-                if field[y][x] == 1:
-                    print(f"{(x, y)} has a ship start entry")
-                    a_ship = Ship((x, y), field)
-                    print(f"Ship of size {a_ship.length} is located in {a_ship.part_positions}")
-                    if not a_ship.validate_surroundings:
-                        print(f"Ship's surroundings are not empty {a_ship.surroundings}. RETURN FALSE")
-                        return False
-                    else:
-                        print(f"Ship's surroundings are empty. OK.")
-                    print(f"Applying mask of the ship to global mask")
-                    a_ship.apply_field_mask(field_mask)
-                    print("Applied:")
-                    repr_field(field_mask)
-                    possible_dict[a_ship.length]["items"].append(a_ship)
-            else:
-                pass
-
-    for ship_class, details in possible_dict.items():
-        if details["max_count"] != len(details["items"]):
-            print(
-                f'There should be {details["max_count"]} ships of length {ship_class}, {len(details["items"])} are available')
-            return False
-
-    pprint(possible_dict)
-    print()
-    return True
+# def validate_battlefield(field):
+#     # write your magic here
+#
+#     possible_dict = {4: {"max_count": 1, "items": []},
+#                      3: {"max_count": 2, "items": []},
+#                      2: {"max_count": 3, "items": []},
+#                      1: {"max_count": 4, "items": []}
+#                      }
+#
+#     # all_ships = []
+#     field_mask = [[0 for _ in range(0, battleField.width + 1)] for __ in range(0, battleField.height + 1)]
+#     for y in range(0, len(field)):
+#         for x in range(0, len(field)):
+#             # print(f"{(x,y)}")
+#             if field_mask[y][x] == 0:
+#                 # print(f"{(x,y)} not masked")
+#                 if field[y][x] == 1:
+#                     print(f"{(x, y)} has a ship start entry")
+#                     a_ship = Ship((x, y), field)
+#                     print(f"Ship of size {a_ship.length} is located in {a_ship.part_positions}")
+#                     if not a_ship.validate_surroundings:
+#                         print(f"Ship's surroundings are not empty {a_ship.surroundings}. RETURN FALSE")
+#                         return False
+#                     else:
+#                         print(f"Ship's surroundings are empty. OK.")
+#                     print(f"Applying mask of the ship to global mask")
+#                     a_ship.apply_field_mask(field_mask)
+#                     print("Applied:")
+#                     repr_field(field_mask)
+#                     possible_dict[a_ship.length]["items"].append(a_ship)
+#             else:
+#                 pass
+#
+#     for ship_class, details in possible_dict.items():
+#         if details["max_count"] != len(details["items"]):
+#             print(
+#                 f'There should be {details["max_count"]} ships of length {ship_class}, {len(details["items"])} are available')
+#             return False
+#
+#     pprint(possible_dict)
+#     print()
+#     return True
 
 
 from pprint import pprint
@@ -162,16 +164,16 @@ def repr_field(field):
         print(f"{y:2} {row}")
 
 
-if __name__ == "__main__":
-    battleField = [[1, 0, 0, 0, 0, 1, 1, 0, 0, 0],
-                   [1, 0, 1, 0, 0, 0, 0, 0, 1, 0],
-                   [1, 0, 1, 0, 1, 1, 1, 0, 1, 0],
-                   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                   [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-                   [0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
-                   [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-                   [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-                   [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-                   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-
-    print(validate_battlefield(battleField))
+# if __name__ == "__main__":
+#     battleField = [[1, 0, 0, 0, 0, 1, 1, 0, 0, 0],
+#                    [1, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+#                    [1, 0, 1, 0, 1, 1, 1, 0, 1, 0],
+#                    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+#                    [0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
+#                    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+#                    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+#                    [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+#                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+#
+#     print(validate_battlefield(battleField))

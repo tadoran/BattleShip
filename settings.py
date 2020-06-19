@@ -1,0 +1,7 @@
+# Graphics
+TILE_WIDTH = 32
+TILE_HEIGHT = 32
+
+# Field
+WIDTH = 10
+HEIGHT = 10
