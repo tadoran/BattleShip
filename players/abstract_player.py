@@ -2,8 +2,12 @@ from field import Field
 from field_status import ShipStatus
 
 
-class Player:
+class PlayerABS:
     def __init__(self, name):
+        self.self_visual_field = None
+        self.enemy_visual_field = None
+        self.visual_surface = None
+
         self.name = name
         self.field = Field()
         self.target = None
@@ -18,13 +22,13 @@ class Player:
     def generate_field(self):
         self.field.generate_ships_randomly()
 
+
     def get_ships(self):
         ships = []
         for ship_class in self.field.possible_dict.values():
             for ship in ship_class["items"]:
                 ships.append(ship)
 
-        # return [ship for ship in [ship_class["items"] for ship_class in self.field.possible_dict.values()]]
         return ships
 
     def validate_field(self):
@@ -37,7 +41,6 @@ class Player:
         raise NotImplementedError
 
     def fire(self, x, y):
-        # x, y = self.select_shoot_coord()
         return self.target.field.register_shot(x, y)
 
     def ships_left(self):
@@ -48,17 +51,3 @@ class Player:
 
     def ships_destroyed(self):
         return sum(1 for ship in self.ships if ship.status() == ShipStatus.DESTROYED)
-
-
-class HumanPlayer(Player):
-    def select_shoot_coord(self):
-        user_input = input("Print shoot coordinates (in format 'x,y')")
-        try:
-            coords = [int(c) for c in user_input.split(",")]
-            assert len(coords) == 2
-            self.last_shot_coords = coords
-            return self.last_shot_coords
-
-        except:
-            print("Wrong input format, try again.")
-            return self.select_shoot_coord()

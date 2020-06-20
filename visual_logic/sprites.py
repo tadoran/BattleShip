@@ -165,7 +165,5 @@ class SeaBackground:
 
 
 scope = pygame.image.load("./images/scope.png")
-scope = pygame.transform.scale(scope, (TILE_WIDTH,TILE_HEIGHT))
+scope = pygame.transform.scale(scope, (TILE_WIDTH, TILE_HEIGHT))
 
-point = pygame.image.load("./images/point.png")
-point = pygame.transform.scale(point, (TILE_WIDTH,TILE_HEIGHT))

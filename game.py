@@ -5,47 +5,20 @@ from pygame.locals import *
 import sounds
 from timer import Timer
 from settings import *
-from visual_logic.sprites import BattleOverlay, scope
+from visual_logic.sprites import BattleOverlay
+
+from field_status import FieldStatus
+from players.computer_player import ComputerPlayer
+from players.human_player import HumanPlayer_interactive
 
 pygame.init()
-
 
 s = pygame.display.set_mode(((WIDTH * TILE_WIDTH) * 2 + 30, (HEIGHT * TILE_HEIGHT) + 20))
 s.fill((255, 255, 255))
 pygame.display.set_caption('Water')
 pygame.mouse.set_cursor((8, 8), (4, 4), (24, 24, 24, 231, 231, 24, 24, 24), (0, 0, 0, 0, 0, 0, 0, 0))
 
-FPS = 12
 FramePerSec = pygame.time.Clock()
-
-
-from field_status import FieldStatus
-from player.computer_player import ComputerPlayer
-from player.player import HumanPlayer
-
-
-class HumanPlayer_interactive(HumanPlayer):
-    def select_shoot_coord(self):
-        coords_missing = True
-        events = pygame.event.get()
-        for event in events:
-            if event.type == MOUSEBUTTONDOWN:
-                coords_missing = False
-
-
-        x, y = pygame.mouse.get_pos()
-        player_cell = bo_enemy.cell_selected(x, y)
-        if player_cell is not None:
-                x_selected, y_selected = player_cell
-                bo_enemy.draw(s)
-                s.blit(scope, (bo_enemy.x + (x_selected * TILE_WIDTH), bo_enemy.y + (y_selected * TILE_HEIGHT)))
-                pygame.display.flip()
-        else:
-            pygame.mouse.set_visible(True)
-
-        if not coords_missing:
-            self.last_shot_coords = player_cell
-            return self.last_shot_coords
 
 
 def game_logic():
@@ -63,10 +36,19 @@ def game_logic():
     me.generate_field()
     [bo_player.add_visible_ship(ship) for ship in me.get_ships()]
     bo_player.update_from_matrix(me.field.field)
+
     enemy = ComputerPlayer("Vassia")
     enemy.generate_field()
     bo_enemy.update_from_matrix(enemy.field.field)
 
+    me.visual_surface = s
+    enemy.visual_surface = s
+
+    me.self_visual_field = bo_player
+    me.enemy_visual_field = bo_enemy
+
+    enemy.self_visual_field = bo_enemy
+    enemy.enemy_visual_field = bo_player
 
     gameboard_positions = [me, enemy]
     screen_fields = [bo_player, bo_enemy]
@@ -83,6 +65,14 @@ def game_logic():
         print(f"Turn #{turn}")
         current_player, enemy_player = gameboard_positions
         current_screen, enemy_screen = screen_fields
+
+        if interval_between_turns:
+            if interval_only_for_computer and isinstance(current_player, ComputerPlayer):
+                no_action_before.start(interval_between_turns_seconds)
+                yield
+            else:
+                no_action_before.start(interval_between_turns_seconds)
+                yield
 
         print(f"{current_player.name.capitalize()} shoots.")
         coords = None
@@ -107,7 +97,6 @@ def game_logic():
             current_player.last_shot_successful = False
             gameboard_positions.reverse()
             screen_fields.reverse()
-            # yield
         else:
             print(f"{current_player.name.capitalize()} hits {enemy_player.name.capitalize()}'s ship.")
             current_player.last_shot_successful = True
@@ -115,24 +104,22 @@ def game_logic():
                 [enemy_screen.add_visible_ship(ship) for ship in enemy_player.field.destroyed_ships]
                 bo_enemy.draw(s)
                 pygame.display.update()
-            yield
+
             if enemy_player.ships_left() == 0:
                 sounds.explosion_sound()
                 print(f"{enemy_player.name.capitalize()} has no more ships.")
                 print(f"{current_player.name.capitalize()} is winner!")
                 game_running = False
-                yield
+
             else:
                 sounds.sunk_sound()
                 print(f"{enemy_player.ships_left()} ships remain. {current_player.name.capitalize()} shoots again.")
-                yield
-        if isinstance(current_player, ComputerPlayer):
-            no_action_before.start(0.1)
+
         FramePerSec.tick(FPS)
         turn += 1
         yield
 
-    no_action_before.start(5)
+    no_action_before.start(interval_on_exit)
     FramePerSec.tick(FPS)
     yield
     pygame.quit()
@@ -156,7 +143,6 @@ while True:
     if no_action_before.check():
         next(gl)
 
-    # print(FramePerSec.get_time(), no_action_before)
     events = pygame.event.get()
     for event in events:
         if event.type == QUIT:

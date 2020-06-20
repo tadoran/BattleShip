@@ -1,7 +1,7 @@
 from random import choice
 
 from field_status import FieldStatus
-from player.player import Player
+from players.abstract_player import PlayerABS
 
 
 def get_neighbour_coordinates(x: int, y: int) -> list:
@@ -18,7 +18,7 @@ def trim_to_boundaries(coords: list, lower_boundary: int = 0, max_x: int = 10, m
     return list(filtered)
 
 
-class ComputerPlayer(Player):
+class ComputerPlayer(PlayerABS):
 
     def select_shoot_coord(self):
         enemy_field = self.target.field.enemy_view
@@ -99,66 +99,3 @@ class ComputerPlayer(Player):
         self.last_shot_coords = choice(possible_coords)
         return self.last_shot_coords
 
-
-# class ComputerPlayer2(Player):
-#
-#     def select_shoot_coord(self):
-#         enemy_field = self.target.field.field
-#         possible_coords = []
-#         field_size = self.field.width
-#
-#         if self.last_shot_successful or self.has_wounded_enemy_ship:
-#             if self.last_shot_successful:
-#                 x_s, y_s = self.last_shot_coords
-#                 coords_to_browse = [
-#                     coord for coord
-#                     in [self.last_shot_coords, self.last_successful_shot_coord] if len(coord) == 2
-#                 ]
-#                 possible_coords.extend(
-#                     [[(x_s - 1, y_s), (x_s + 1, y_s), (x_s, y_s - 1), (x_s, y_s + 1)]
-#                      for x_s, y_s in coords_to_browse][0]
-#                 )
-#                 self.last_successful_shot_coord = self.last_shot_coords
-#             else:
-#                 x_s, y_s = self.last_successful_shot_coord
-#                 possible_coords = [(x_s - 1, y_s), (x_s + 1, y_s), (x_s, y_s - 1), (x_s, y_s + 1)]
-#
-#             possible_coords = [(x, y) for x, y in possible_coords if (0 < x < field_size) and (0 < y < field_size)]
-#
-#             surrounds_explored = sum(
-#                 1 for x, y in possible_coords
-#                 if enemy_field[y][x] in [FieldStatus.SHOT, FieldStatus.SHIP_DESTROYED]
-#             ) == len(possible_coords)
-#
-#             if surrounds_explored:
-#                 self.has_wounded_enemy_ship = False
-#             else:
-#                 self.has_wounded_enemy_ship = True
-#                 for x, y in possible_coords:
-#                     if enemy_field[y][x] == FieldStatus.SHIP_DESTROYED:
-#                         if x == x_s:
-#                             ship_position = 'horizontal'
-#                             possible_coords = [(x, y) for x, y in possible_coords if x == x_s]
-#                             break
-#                         else:
-#                             ship_position = 'vertical'
-#                             possible_coords = [(x, y) for x, y in possible_coords if y == y_s]
-#                             break
-#
-#                 possible_coords = [
-#                     (x, y)
-#                     for x, y in possible_coords
-#                     if 0 < x < field_size and 0 < y < field_size and
-#                        enemy_field[y][x] not in [FieldStatus.SHOT, FieldStatus.SHIP_DESTROYED]
-#                 ]
-#
-#                 if len(possible_coords) > 0:
-#                     self.last_shot_coords = choice(possible_coords)
-#                     return self.last_shot_coords
-#
-#         for y, row in enumerate(enemy_field):
-#             for x, col_row in enumerate(row):
-#                 if col_row not in [FieldStatus.SHOT, FieldStatus.SHIP_DESTROYED]:
-#                     possible_coords.append((x, y))
-#         self.last_shot_coords = choice(possible_coords)
-#         return self.last_shot_coords
